@@ -55,17 +55,6 @@ Deployed on **Vercel** with automatic CI/CD from GitHub.
 ### Environment Variables
 Make sure to add `HF_API_KEY` in your Vercel project settings.
 
-## 📁 Project Structure
-
-voicemate/
-├── api/
-│ └── index.js # Express backend API
-├── frontend/
-│ └── index.html # Main UI
-├── package.json # Dependencies
-├── vercel.json # Vercel configuration
-├── .gitignore # Ignored files
-└── README.md # Project documentation
 
 
 ## 💡 How It Works
