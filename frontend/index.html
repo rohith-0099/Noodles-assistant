@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VoiceMate AI</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Google Sans', 'Segoe UI', Roboto, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      overflow: hidden;
+    } 
+
+    /* Animated background particles */
+    body::before {
+      content: '';
+      position: fixed;
+      width: 200%;
+      height: 200%;
+      top: -50%;
+      left: -50%;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 1px, transparent 1px);
+      background-size: 50px 50px;
+      animation: moveBackground 20s linear infinite;
+      z-index: 0;
+    }
+
+    @keyframes moveBackground {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 900px;
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    h1 {
+      color: #fff;
+      font-size: 28px;
+      font-weight: 500;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 14px;
+      margin-top: 8px;
+    }
+
+    /* Voice Orb */
+    .voice-orb-container {
+      display: flex;
+      justify-content: center;
+      margin: 40px 0;
+      position: relative;
+    }
+
+    .voice-orb {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 50% 50%, rgba(20, 20, 40, 0.8), rgba(10, 10, 30, 0.95));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      border: 3px solid transparent;
+      background-clip: padding-box;
+    }
+
+    .voice-orb::before {
+      content: '';
+      position: absolute;
+      width: calc(100% + 6px);
+      height: calc(100% + 6px);
+      border-radius: 50%;
+      background: linear-gradient(135deg, #a855f7, #6366f1, #06b6d4);
+      z-index: -1;
+      filter: blur(15px);
+      opacity: 0.8;
+      animation: rotateGradient 3s linear infinite, pulse 2s ease-in-out infinite;
+      top: -3px;
+      left: -3px;
+    }
+
+    @keyframes rotateGradient {
+      0% { transform: rotate(0deg) scale(1); }
+      100% { transform: rotate(360deg) scale(1); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+
+    .voice-orb.active::before {
+      background: linear-gradient(135deg, #f472b6, #a855f7, #06b6d4, #10b981);
+      animation: rotateGradient 2s linear infinite, activePulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes activePulse {
+      0%, 100% { opacity: 0.8; filter: blur(15px); }
+      50% { opacity: 1; filter: blur(20px); }
+    }
+
+    .voice-orb-icon {
+      width: 50px;
+      height: 60px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Microphone SVG Icon */
+    .mic-icon {
+      fill: none;
+      stroke: #fff;
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      filter: drop-shadow(0 2px 8px rgba(99, 102, 241, 0.5));
+    }
+
+
+    .voice-status {
+      text-align: center;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 14px;
+      margin-top: 20px;
+      min-height: 20px;
+    }
+
+    /* Chat box */
+    #chat-box {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      height: 300px;
+      overflow-y: auto;
+      padding: 20px;
+      margin: 30px 0;
+      scroll-behavior: smooth;
+    }
+
+    #chat-box::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    #chat-box::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 3px;
+    }
+
+    #chat-box::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 3px;
+    }
+
+    #chat-box::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .message {
+      margin: 12px 0;
+      padding: 12px 16px;
+      border-radius: 16px;
+      max-width: 80%;
+      animation: slideIn 0.3s ease-out;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .message.user {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      color: #fff;
+      margin-left: auto;
+      border-bottom-right-radius: 4px;
+    }
+
+    .message.bot {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border-bottom-left-radius: 4px;
+    }
+
+    .message.live {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.6) 0%, rgba(139, 92, 246, 0.6) 100%);
+      animation: livePulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes livePulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    /* Input area */
+    .input-container {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    #user-input {
+      flex: 1;
+      padding: 16px 20px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      color: #fff;
+      font-size: 14px;
+      transition: all 0.3s;
+      outline: none;
+    }
+
+    #user-input::placeholder {
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    #user-input:focus {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(99, 102, 241, 0.5);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    button {
+      padding: 16px 24px;
+      border: none;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #send-btn {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      color: #fff;
+    }
+
+    #send-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+    }
+
+    #send-btn:active {
+      transform: translateY(0);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container {
+        padding: 24px;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+
+      .voice-orb {
+        width: 160px;
+        height: 160px;
+      }
+
+      .voice-orb-icon {
+        font-size: 48px;
+      }
+
+      #chat-box {
+        height: 250px;
+      }
+
+      .input-container {
+        flex-direction: column;
+      }
+
+      button {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Noodles</h1>
+      <p class="subtitle">Your intelligent voice assistant</p>
+    </header>
+
+    <div class="voice-orb-container">
+      <div class="voice-orb" id="voice-orb">
+        <svg class="voice-orb-icon" viewBox="0 0 24 24">
+          <rect class="mic-icon" x="9" y="3" width="6" height="11" rx="3"/>
+          <path class="mic-icon" d="M5 10v2a7 7 0 0 0 14 0v-2"/>
+          <line class="mic-icon" x1="12" y1="19" x2="12" y2="23"/>
+          <line class="mic-icon" x1="8" y1="23" x2="16" y2="23"/>
+        </svg>
+      </div>
+    </div>
+    <div class="voice-status" id="voice-status">Click the orb to start speaking</div>
+
+    <div id="chat-box"></div>
+
+    <div class="input-container">
+      <input type="text" id="user-input" placeholder="Type a message or use voice...">
+      <button id="send-btn">
+        <span>Send</span>
+        <span>➤</span>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const chatBox = document.getElementById("chat-box");
+    const userInput = document.getElementById("user-input");
+    const sendBtn = document.getElementById("send-btn");
+    const voiceOrb = document.getElementById("voice-orb");
+    const voiceStatus = document.getElementById("voice-status");
+
+    // State management
+    const state = {
+        isListening: false,
+        isAISpeaking: false,
+        currentTranscript: '',
+        silenceTimer: null,
+        liveMessageElement: null,
+        recognition: null,
+        recognitionActive: false
+    };
+
+    // Initialize speech recognition
+    function initSpeechRecognition() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        
+        if (!SpeechRecognition) {
+            console.error('Speech recognition not supported');
+            return null;
+        }
+
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = "en-US";
+        recognition.maxAlternatives = 1;
+
+        recognition.onstart = () => {
+            console.log('Speech recognition started');
+            state.recognitionActive = true;
+        };
+
+        recognition.onresult = handleSpeechResult;
+        recognition.onend = handleRecognitionEnd;
+        recognition.onerror = handleRecognitionError;
+
+        return recognition;
+    }
+
+    function handleSpeechResult(event) {
+        if (state.isAISpeaking) {
+            console.log('Ignoring speech - AI is speaking');
+            return;
+        }
+
+        let interimTranscript = '';
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+                finalTranscript += transcript;
+            } else {
+                interimTranscript += transcript;
+            }
+        }
+
+        if (finalTranscript) {
+            state.currentTranscript += finalTranscript;
+        }
+
+        const displayText = state.currentTranscript + interimTranscript;
+
+        if (displayText.trim()) {
+            updateLiveMessage(displayText);
+            resetSilenceTimer();
+        }
+    }
+
+    function updateLiveMessage(text) {
+        if (!state.liveMessageElement) {
+            state.liveMessageElement = document.createElement("div");
+            state.liveMessageElement.className = "message user live";
+            chatBox.appendChild(state.liveMessageElement);
+        }
+        state.liveMessageElement.textContent = text;
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function resetSilenceTimer() {
+        clearTimeout(state.silenceTimer);
+        
+        if (state.isAISpeaking) {
+            return;
+        }
+        
+        state.silenceTimer = setTimeout(() => {
+            if (state.currentTranscript.trim() && !state.isAISpeaking) {
+                finalizeLiveMessage();
+                sendMessage(state.currentTranscript.trim());
+                state.currentTranscript = '';
+            }
+        }, 1000);
+    }
+
+    function finalizeLiveMessage() {
+        if (state.liveMessageElement) {
+            state.liveMessageElement.classList.remove("live");
+            state.liveMessageElement = null;
+        }
+    }
+
+    function handleRecognitionEnd() {
+        console.log('Speech recognition ended');
+        state.recognitionActive = false;
+        
+        if (state.isListening && !state.isAISpeaking) {
+            console.log('Restarting speech recognition...');
+            setTimeout(() => {
+                if (state.isListening && state.recognition && !state.isAISpeaking) {
+                    try {
+                        state.recognition.start();
+                    } catch (err) {
+                        console.error('Error restarting recognition:', err);
+                        setTimeout(() => {
+                            if (state.isListening && state.recognition && !state.isAISpeaking) {
+                                try {
+                                    state.recognition.start();
+                                } catch (e) {
+                                    console.error('Failed to restart:', e);
+                                }
+                            }
+                        }, 500);
+                    }
+                }
+            }, 100);
+        }
+    }
+
+    function handleRecognitionError(event) {
+        console.error('Speech recognition error:', event.error);
+        state.recognitionActive = false;
+        
+        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+            addMessage("bot", "Microphone access denied. Please enable it in your browser settings.");
+            stopConversation();
+            return;
+        }
+        
+        if (state.isListening && !state.isAISpeaking) {
+            console.log('Attempting to restart after error...');
+            setTimeout(() => {
+                if (state.isListening && state.recognition && !state.isAISpeaking) {
+                    try {
+                        state.recognition.start();
+                    } catch (err) {
+                        console.error('Failed to restart after error:', err);
+                    }
+                }
+            }, 300);
+        }
+    }
+
+    function addMessage(sender, text) {
+        const msg = document.createElement("div");
+        msg.className = `message ${sender}`;
+        msg.textContent = text;
+        chatBox.appendChild(msg);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    async function sendMessage(message) {
+        if (!message?.trim()) return;
+
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+            const res = await fetch("/api/message", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message }),
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+
+            if (!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`);
+            }
+
+            const data = await res.json();
+            
+            if (data.error) {
+                addMessage("bot", data.reply);
+                return;
+            }
+
+            addMessage("bot", data.reply);
+            speakResponse(data.reply);
+
+        } catch (err) {
+            console.error('Error sending message:', err);
+            
+            if (err.name === 'AbortError') {
+                addMessage("bot", "Request timeout. Please try again.");
+            } else {
+                addMessage("bot", "Connection error. Please check your internet.");
+            }
+            state.isAISpeaking = false;
+        }
+    }
+
+    function speakResponse(text) {
+        console.log('AI starting to speak');
+        state.isAISpeaking = true;
+        voiceStatus.textContent = "AI is speaking...";
+        
+        state.currentTranscript = '';
+        clearTimeout(state.silenceTimer);
+        finalizeLiveMessage();
+        
+        if (state.recognitionActive && state.recognition) {
+            console.log('Stopping recognition during AI speech');
+            try {
+                state.recognition.stop();
+            } catch (err) {
+                console.error('Error stopping recognition:', err);
+            }
+        }
+        
+        speechSynthesis.cancel();
+        
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+        utterance.volume = 1.0;
+
+        utterance.onstart = () => {
+            console.log('TTS started');
+            state.isAISpeaking = true;
+        };
+
+        utterance.onend = () => {
+            console.log('AI finished speaking');
+            state.isAISpeaking = false;
+            voiceStatus.textContent = state.isListening ? "Listening..." : "Click the orb to start speaking";
+            
+            if (state.isListening && state.recognition) {
+                console.log('Waiting before restarting recognition...');
+                setTimeout(() => {
+                    if (state.isListening && state.recognition && !state.recognitionActive) {
+                        try {
+                            state.recognition.start();
+                            console.log('Recognition restarted successfully after AI speech');
+                        } catch (err) {
+                            console.error('Error restarting after speech:', err);
+                            setTimeout(() => {
+                                if (state.isListening && state.recognition && !state.recognitionActive) {
+                                    try {
+                                        state.recognition.start();
+                                    } catch (e) {
+                                        console.error('Final restart attempt failed:', e);
+                                    }
+                                }
+                            }, 500);
+                        }
+                    }
+                }, 500);
+            }
+        };
+
+        utterance.onerror = (err) => {
+            console.error('Speech synthesis error:', err);
+            state.isAISpeaking = false;
+            voiceStatus.textContent = state.isListening ? "Listening..." : "Click the orb to start speaking";
+            
+            if (state.isListening && state.recognition && !state.recognitionActive) {
+                setTimeout(() => {
+                    try {
+                        state.recognition.start();
+                    } catch (e) {
+                        console.error('Error restarting after TTS error:', e);
+                    }
+                }, 300);
+            }
+        };
+
+        speechSynthesis.speak(utterance);
+    }
+
+    function startConversation() {
+        if (!state.recognition) {
+            state.recognition = initSpeechRecognition();
+            if (!state.recognition) {
+                addMessage("bot", "Speech recognition not supported. Please use Chrome or Edge.");
+                return;
+            }
+        }
+
+        try {
+            state.recognition.start();
+            state.isListening = true;
+            voiceOrb.classList.add('active');
+            voiceStatus.textContent = "Listening...";
+            addMessage("bot", "Hello! I'm listening. Start talking!");
+        } catch (err) {
+            console.error('Error starting conversation:', err);
+            addMessage("bot", "Failed to start. Please try again.");
+        }
+    }
+
+    function stopConversation() {
+        if (state.recognition) {
+            state.recognition.stop();
+        }
+        state.isListening = false;
+        state.recognitionActive = false;
+        speechSynthesis.cancel();
+        state.isAISpeaking = false;
+        clearTimeout(state.silenceTimer);
+        state.currentTranscript = '';
+        finalizeLiveMessage();
+        voiceOrb.classList.remove('active');
+        voiceStatus.textContent = "Click the orb to start speaking";
+        addMessage("bot", "Conversation ended.");
+    }
+
+    // Event listeners
+    sendBtn.addEventListener("click", () => {
+        const message = userInput.value.trim();
+        if (message) {
+            addMessage("user", message);
+            sendMessage(message);
+            userInput.value = "";
+        }
+    });
+
+    userInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+            const message = userInput.value.trim();
+            if (message) {
+                addMessage("user", message);
+                sendMessage(message);
+                userInput.value = "";
+            }
+        }
+    });
+
+    voiceOrb.addEventListener("click", () => {
+        state.isListening ? stopConversation() : startConversation();
+    });
+
+    window.addEventListener("beforeunload", () => {
+        stopConversation();
+    });
+
+    setInterval(() => {
+        if (state.isListening && !state.recognitionActive && !state.isAISpeaking) {
+            console.log('Watchdog: Recognition should be active but isn\'t. Restarting...');
+            try {
+                state.recognition?.start();
+            } catch (err) {
+                console.error('Watchdog restart failed:', err);
+            }
+        }
+    }, 2000);
+  </script>
+</body>
+</html>
